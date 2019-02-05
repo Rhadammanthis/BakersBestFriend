@@ -1,1 +1,1 @@
-src\IngridientTab.cmj : src\DropDownBar.cmj src\FractionBubble.cmj src\IngridientViewPager.cmj src\VerticalSlider.cmj
+src\IngridientTab.cmj : src\Colors.cmj src\FractionBubble.cmj src\IngridientViewPager.cmj src\Ingridients.cmj src\Parse.cmj src\VerticalSlider.cmj

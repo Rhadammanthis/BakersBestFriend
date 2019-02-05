@@ -59,10 +59,14 @@ module Styles = {
   let text = style([color(String("#fff")), fontSize(Float(24.))]);
 };
 
+type measurementUnits = 
+  | Metric
+  | Imperial;
+
 type state = {
   algo: int,
-  initial: float,
-  converted: float,
+  initial: int,
+  converted: int,
   sliderUnit: int,
   sliderUnitMessage: string,
   translateX: float,
@@ -70,34 +74,43 @@ type state = {
   ingridientAssets: imageResource,
   currentIngridient: int,
   sliderHasFocus: bool,
+  measurementUnit: measurementUnits
 };
 type action =
   | ChangeAlgo(int)
-  | UpdateConvertedAmount(float)
-  | UpdateInitialAmount(float)
+  | UpdateConvertedAmount(int)
+  | UpdateInitialAmount(int)
   | ChangeSliderUnit(int)
   | UpdateAnimatedValue(float)
   | UpdateImageContainerWidth(float)
   | SetCurrentIngridient(int)
-  | UpdateSliderFocus(bool);
+  | UpdateSliderFocus(bool)
+  | ChangeMesurementUnit(measurementUnits);
 
 let component = ReasonReact.reducerComponent("Main");
 
-let circleDiameter = 100.;
-let textSize = 18.;
+let circleDiameter = 120.;
+let textSize = 20.;
 
 let animatedValue = Animated.Value.create(1.0);
 
-/* let listener = (~step: int) => {
-     Js.log("On step number: " ++ string_of_int(step));
+let unitFactor = (unit: measurementUnits) => {
+  let factor = switch(unit){
+  | Imperial => 0.035; 
+  | Metric => 1.
+  };
+  factor;
+}
+
+/*0.035274
    }; */
 
 let make = _children => {
   ...component,
   initialState: () => {
     algo: 0,
-    initial: 0.,
-    converted: 0.,
+    initial: 0,
+    converted: 0,
     sliderUnit: 0,
     sliderUnitMessage: "Half a cup (1/2)",
     translateX: 0.,
@@ -108,6 +121,7 @@ let make = _children => {
     },
     currentIngridient: 0,
     sliderHasFocus: false,
+    measurementUnit: Metric
   },
   reducer: (action, state) =>
     switch (action) {
@@ -123,6 +137,13 @@ let make = _children => {
       ReasonReact.Update({...state, translateX: anim})
     | UpdateSliderFocus(b) =>
       ReasonReact.Update({...state, sliderHasFocus: b})
+    | ChangeMesurementUnit(u) => {
+      let newUnit = switch(u){
+      | Imperial => Metric;
+      | Metric => Imperial;
+      };
+      ReasonReact.Update({...state, measurementUnit: newUnit})
+    }
     | ChangeSliderUnit(u) =>
       let message =
         switch (u) {
@@ -138,13 +159,13 @@ let make = _children => {
       });
     },
   render: self =>
-    <View style=Style.(style([flex(1.), paddingTop(Pt(20.))]))>
+    <View style=Style.(style([flex(1.), paddingTop(Pt(10.))]))>
       <View style=Styles.container>
         <VerticalSlider
           onStepMet=(
             (step: int) => {
-              self.send(UpdateInitialAmount(float_of_int(step) *. 0.5));
-              self.send(UpdateConvertedAmount(float_of_int(step) *. 60.));
+              self.send(UpdateInitialAmount(step));
+              self.send(UpdateConvertedAmount(step));
             }
           )
           onHorizontalStep=(
@@ -165,6 +186,7 @@ let make = _children => {
                       justifyContent(FlexStart),
                       alignItems(FlexEnd),
                       paddingTop(Pt(30.)),
+                      marginRight(Pt(20.))
                     ])
                   )>
             <View
@@ -198,11 +220,11 @@ let make = _children => {
                   style=Style.(
                           style([
                             color(String("white")),
-                            fontSize(Float(textSize)),
+                            fontSize(Float(textSize +. 10.)),
                             marginLeft(Pt(circleDiameter /. 2.5)),
                           ])
                         )
-                  value=(string_of_float(self.state.initial))
+                  value=(Parse.message(self.state.initial))
                 />
               </View>
             </View>
@@ -226,17 +248,48 @@ let make = _children => {
                 style=Style.(
                         style([
                           color(String("white")),
-                          fontSize(Float(textSize)),
+                          fontSize(Float(textSize +. 5.)),
                         ])
                       )
-                value=(string_of_float(self.state.converted) ++ " gr.")
+                value=(string_of_float(Parse.value(self.state.converted, Ingridients.find(self.state.currentIngridient).density, unitFactor(self.state.measurementUnit))) ++ switch self.state.measurementUnit {
+                  | Metric => " gr."
+                  | Imperial => " oz."
+                  })
               />
             </View>
             <FractionBubble
-            step=self.state.sliderUnit
-            /* shouldTriggerAnim=self.state.sliderHasFocus */
+              onPress=( () => {self.send(ChangeMesurementUnit(self.state.measurementUnit))} )
+              diameter = (circleDiameter /. 2.)
+              text=( switch self.state.measurementUnit {
+                | Metric => "Kg"
+                | Imperial => "Oz"
+                } )
+              style=Style.(
+                      style([
+                        borderColor(Colors.lemonTea),
+                        borderWidth(4.),
+                        position(Absolute),
+                        right(Pt(circleDiameter)),
+                        top(Pt(0.)),
+                        backgroundColor(Colors.oyster),
+                      ])
+                    )
             />
-
+            <FractionBubble
+              onPress=( () => {self.send(ChangeMesurementUnit(self.state.measurementUnit))} )
+              diameter = (circleDiameter /. 2.)
+              text=( "+/- 1")
+              style=Style.(
+                      style([
+                        borderColor(Colors.lemonTea),
+                        borderWidth(4.),
+                        position(Absolute),
+                        right(Pt(- 17.5)),
+                        top(Pt(circleDiameter *. 0.93)),
+                        backgroundColor(Colors.oyster),
+                      ])
+                    )
+            />
           </View>
           <View style=Style.(style([flex(2.), marginBottom(Pt(50.))]))>
             <IngridientViewPager
@@ -333,9 +386,9 @@ let make = _children => {
           />
         </View>
       </ViewPagerAndroid>
-      <DropDownBar
-        shouldTriggerAnim=self.state.sliderHasFocus
-        step=self.state.sliderUnit
-      />
     </View>,
+  /* <DropDownBar
+       shouldTriggerAnim=self.state.sliderHasFocus
+       step=self.state.sliderUnit
+     /> */
 };

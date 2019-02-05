@@ -1,126 +1,126 @@
 open BsReactNative;
 
-type action =
-  | TriggerAnim(bool)
-  | ResetValue
-  | SetMessage(string);
-
-type animationReverser = {
-  forward: list(float),
-  backwards: list(float),
-};
-
 type state = {
-  onScreen: bool,
-  scale: Animated.value(Animated.regular),
-  message: string
+  animation: Animated.value(Animated.regular),
+  played: bool,
 };
+type action =
+  | StartAnim(bool)
+  | Spring;
 
-type retainedProps = {step: int};
+let component = ReasonReact.reducerComponent("FractionBubble");
 
-let reverser: animationReverser = {
-    forward: [0., 1.],
-    backwards: [1., 0.],
-  };
-
-let component =
-  ReasonReact.reducerComponentWithRetainedProps("FractionBubble");
-
-let circleDiameter = 100.
-
-let make = (~step: int, _children) => {
+let make = (~style, ~text, ~onPress, ~diameter, _children) => {
   ...component,
-  initialState: () => {onScreen: false, scale: Animated.Value.create(1.), message: ""},
+  initialState: () => {animation: Animated.Value.create(0.), played: false},
   reducer: (action, state) =>
     switch (action) {
-    | ResetValue =>
-      ReasonReact.Update({...state, scale: Animated.Value.create(0.)})
-    | SetMessage(s) => 
-    ReasonReact.Update({...state, message: s})
-    | TriggerAnim(v) =>
+    | Spring =>
       let animation =
-        Animated.timing(
-          ~value=state.scale,
-          ~toValue=`raw(1.0),
-          ~duration=300.0,
+        Animated.spring(
+          ~value=state.animation,
+          ~toValue=`raw(0.0),
+          ~friction=3.5,
+          ~tension=35.,
           (),
         );
 
-      Animated.start(animation, Js.log("Complete in bubble"));
+      Animated.start(animation, ());
 
-      ReasonReact.Update({...state, onScreen: v});
+      ReasonReact.Update({...state, played: ! state.played});
+    | StartAnim(v) =>
+      let animation =
+        Animated.timing(
+          ~value=state.animation,
+          ~toValue=`raw(v ? 1.0 : 0.),
+          ~duration=100.0,
+          (),
+        );
+
+      Animated.start(animation, ());
+
+      ReasonReact.Update({...state, played: ! state.played});
     },
-  retainedProps: {
-    step: step,
-  },
-  didUpdate: ({oldSelf, newSelf}) =>{
-    if (oldSelf.retainedProps.step
-        !== newSelf.retainedProps.step) {
-      /* Animation */
-
-      switch newSelf.retainedProps.step {
-        | 0 => { newSelf.send(ResetValue);
-        newSelf.send(TriggerAnim(false)); }
-        | 1 => { newSelf.send(ResetValue);
-      newSelf.send(TriggerAnim(true));
-      newSelf.send(SetMessage("1/3")); }
-      | 2 => { newSelf.send(ResetValue);
-      newSelf.send(TriggerAnim(true));
-      newSelf.send(SetMessage("1/4")); }
-      };
-      
-    }},
-  render: self =>
+  render: self => {
     /* self.send(TriggerAnim(shouldTriggerAnim)); */
     /*Parent view*/
     /* Js.log("inittial: " ++ string_of_bool(shouldTriggerAnim)); */
-    <Animated.View
-      style=Style.(
-              style([
-                borderColor(Colors.lemonTea),
-                borderWidth(4.),
-                position(Absolute),
-                justifyContent(Center),
-                right(Pt(circleDiameter)),
-                top(Pt(0.)),
-                alignItems(Center),
-                borderRadius(circleDiameter /. 2.),
-                width(Pt(circleDiameter /. 2.)),
-                height(Pt(circleDiameter /. 2.)),
-                backgroundColor(Colors.oyster),
-                Transform.makeInterpolated(
-                  ~scaleX=
-                    Animated.Value.interpolate(
-                      self.state.scale,
-                      ~inputRange=[0., 1.],
-                      ~outputRange=
-                        `float(
-                            self.state.onScreen ?
-                            reverser.forward : reverser.backwards,
-                        ),
-                      (),
-                    ),
-                    ~scaleY=
-                    Animated.Value.interpolate(
-                      self.state.scale,
-                      ~inputRange=[0., 1.],
-                      ~outputRange=
-                        `float(self.state.onScreen ?
-                        reverser.forward : reverser.backwards,
-                        ),
-                      (),
-                    ),
+
+    let animated = Animated.Value.create(0.);
+
+    let newStyle =
+      BsReactNative.Style.combine(
+        style,
+        Style.(
+          style([
+            justifyContent(Center),
+            alignItems(Center),
+            borderRadius(diameter),
+            width(Pt(diameter)),
+            height(Pt(diameter)),
+            Transform.makeInterpolated(
+              ~scaleX=
+                Animated.Value.interpolate(
+                  self.state.animation,
+                  ~inputRange=[0., 1.],
+                  ~outputRange=`float([1., 1.25]),
                   (),
                 ),
-              ])
-            )>
-      <Text
-        style=Style.(
-                style([color(String("white")), fontSize(Float(14.))])
-              )
-        value=self.state.message
-      />
-    </Animated.View>,
+              ~scaleY=
+                Animated.Value.interpolate(
+                  self.state.animation,
+                  ~inputRange=[0., 1.],
+                  ~outputRange=`float([1., 1.25]),
+                  (),
+                ),
+              (),
+            ),
+          ])
+        ),
+      );
+
+    <Animated.View style=newStyle>
+      <TouchableWithoutFeedback
+        style=newStyle
+        onPressIn=(
+          () => {
+            Js.log("innnn");
+            self.send(StartAnim(true));
+          }
+        )
+        onPressOut=(
+          () => {
+            Js.log("out");
+            self.send(StartAnim(false));
+          }
+        )
+        onPress=(
+          () => {
+            Js.log("pressed");
+            self.send(Spring);
+            onPress();
+          }
+        )>
+        <View
+          style=Style.(
+                  style([
+                    width(Pt(diameter)),
+                    height(Pt(diameter)),
+                    borderRadius(diameter),
+                    justifyContent(Center),
+                    alignItems(Center),
+                  ])
+                )>
+          <Text
+            style=Style.(
+                    style([color(String("white")), fontSize(Float(14.))])
+                  )
+            value=text
+          />
+        </View>
+      </TouchableWithoutFeedback>
+    </Animated.View>;
+  },
 };
 
 /*

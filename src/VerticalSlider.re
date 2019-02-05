@@ -32,7 +32,7 @@ type step = {
   value: int,
 };
 
-let circleDiameter = 40.;
+let circleDiameter = 35.;
 
 let component = ReasonReact.reducerComponent("VerticalSlider");
 
@@ -41,7 +41,7 @@ type rangesVal = {
   max: int,
   steps: int,
 };
-let ranges = {min: 0, max: 100, steps: 10};
+let ranges = {min: 0, max: 100, steps: 6};
 
 let getBottomOffsetFromValue =
     (~value: int, ~rangeMin: int, ~rangeMax: int, ~barHeight: float) =>
@@ -92,8 +92,8 @@ let generateStepMarkers = (~steps: int, ~barHeight: float) => {
                     marginBottom(Pt(10.)),
                     backgroundColor(String("#867666")),
                     position(Absolute),
-                    height(Pt(4.)),
-                    width(Pt(25.)),
+                    height(Pt(3.5)),
+                    width(Pt(23.)),
                     bottom(Pt(offsetItem +. circleDiameter /. 4.)),
                   ])
                 )
