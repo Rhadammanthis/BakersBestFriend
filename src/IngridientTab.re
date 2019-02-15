@@ -11,7 +11,7 @@ type ingridient =
   | Sugar;
 
 type coordinates = {
-  right: float,
+  right: int,
   left: float,
 };
 
@@ -39,29 +39,25 @@ module Styles = {
       flexDirection(Row),
       justifyContent(FlexStart),
       padding(Pt(10.)),
-      backgroundColor(String("#EAE2D6")),
+      backgroundColor(Colors.linen),
     ]);
 
   let rightPanel =
     style([
       flex(1.),
       flexDirection(Column),
-      backgroundColor(String("#EAE2D6")),
+      backgroundColor(Colors.linen),
     ]);
 
   let bottomTab =
     style([
-      backgroundColor(String("#867666")),
+      backgroundColor(Colors.pewter),
       alignItems(Center),
       justifyContent(Center),
     ]);
 
   let text = style([color(String("#fff")), fontSize(Float(24.))]);
 };
-
-type measurementUnits = 
-  | Metric
-  | Imperial;
 
 type state = {
   algo: int,
@@ -74,7 +70,8 @@ type state = {
   ingridientAssets: imageResource,
   currentIngridient: int,
   sliderHasFocus: bool,
-  measurementUnit: measurementUnits
+  measurementUnit: Ingridients.measurementUnits,
+  extraCups: int,
 };
 type action =
   | ChangeAlgo(int)
@@ -85,25 +82,27 @@ type action =
   | UpdateImageContainerWidth(float)
   | SetCurrentIngridient(int)
   | UpdateSliderFocus(bool)
-  | ChangeMesurementUnit(measurementUnits);
+  | ChangeMesurementUnit(Ingridients.measurementUnits)
+  | AddExtraCup(int);
 
 let component = ReasonReact.reducerComponent("Main");
 
-let circleDiameter = 120.;
-let textSize = 20.;
+let circleDiameter = 110.;
+let textSize = 17.;
 
 let animatedValue = Animated.Value.create(1.0);
 
-let unitFactor = (unit: measurementUnits) => {
-  let factor = switch(unit){
-  | Imperial => 0.035; 
-  | Metric => 1.
-  };
+let unitFactor = (unit: Ingridients.measurementUnits) => {
+  let factor =
+    switch (unit) {
+    | Imperial => 0.035
+    | Metric => 1.
+    };
   factor;
-}
+};
 
 /*0.035274
-   }; */
+  }; */
 
 let make = _children => {
   ...component,
@@ -121,10 +120,16 @@ let make = _children => {
     },
     currentIngridient: 0,
     sliderHasFocus: false,
-    measurementUnit: Metric
+    measurementUnit: Metric,
+    extraCups: 0,
   },
   reducer: (action, state) =>
     switch (action) {
+    | AddExtraCup(i) =>
+      ReasonReact.Update({
+        ...state,
+        extraCups: state.extraCups + i > 0 ? state.extraCups + i : 0,
+      })
     | ChangeAlgo(v) => ReasonReact.Update({...state, algo: v})
     | UpdateConvertedAmount(f) => ReasonReact.Update({...state, converted: f})
     | UpdateInitialAmount(f) => ReasonReact.Update({...state, initial: f})
@@ -137,13 +142,13 @@ let make = _children => {
       ReasonReact.Update({...state, translateX: anim})
     | UpdateSliderFocus(b) =>
       ReasonReact.Update({...state, sliderHasFocus: b})
-    | ChangeMesurementUnit(u) => {
-      let newUnit = switch(u){
-      | Imperial => Metric;
-      | Metric => Imperial;
-      };
-      ReasonReact.Update({...state, measurementUnit: newUnit})
-    }
+    | ChangeMesurementUnit(u) =>
+      let newUnit =
+        switch (u) {
+        | Imperial => Ingridients.Metric
+        | Metric => Ingridients.Imperial
+        };
+      ReasonReact.Update({...state, measurementUnit: newUnit});
     | ChangeSliderUnit(u) =>
       let message =
         switch (u) {
@@ -186,13 +191,13 @@ let make = _children => {
                       justifyContent(FlexStart),
                       alignItems(FlexEnd),
                       paddingTop(Pt(30.)),
-                      marginRight(Pt(20.))
+                      marginRight(Pt(25.)),
                     ])
                   )>
             <View
               style=Style.(
                       style([
-                        borderColor(String("#E1B80D")),
+                        borderColor(Colors.lemonTea),
                         borderWidth(4.),
                         position(Absolute),
                         justifyContent(Center),
@@ -200,7 +205,7 @@ let make = _children => {
                         borderRadius(circleDiameter),
                         width(Pt(circleDiameter)),
                         height(Pt(circleDiameter)),
-                        backgroundColor(String("#D5C3AA")),
+                        backgroundColor(Colors.oyster),
                       ])
                     )>
               <View style=Style.(style([]))>
@@ -215,81 +220,145 @@ let make = _children => {
                   value="Cups"
                 />
               </View>
-              <View>
+              <View
+                style=Style.(
+                        style([
+                          flexDirection(Row),
+                          justifyContent(FlexEnd),
+                          alignItems(Center),
+                        ])
+                      )>
                 <Text
                   style=Style.(
                           style([
                             color(String("white")),
                             fontSize(Float(textSize +. 10.)),
-                            marginLeft(Pt(circleDiameter /. 2.5)),
+                            paddingLeft(Pt(circleDiameter /. 2.5)),
                           ])
                         )
-                  value=(Parse.message(self.state.initial))
+                  value=(
+                    Parse.message(self.state.initial, self.state.extraCups)
+                  )
                 />
               </View>
             </View>
             <View
               style=Style.(
                       style([
-                        right(Pt(circleDiameter /. 3.)),
+                        right(Pt(circleDiameter /. 2.5)),
                         top(Pt(circleDiameter /. 2.5)),
-                        borderColor(String("#E1B80D")),
-                        borderWidth(8.),
+                        borderColor(Colors.lemonTea),
+                        borderWidth(6.),
                         position(Absolute),
                         justifyContent(Center),
                         alignItems(Center),
                         borderRadius(circleDiameter),
                         width(Pt(circleDiameter)),
                         height(Pt(circleDiameter)),
-                        backgroundColor(String("#D5C3AA")),
+                        backgroundColor(Colors.oyster),
+                        flex(1.),
+                        flexDirection(Row),
                       ])
                     )>
               <Text
+                adjustsFontSizeToFit=true
+                minimumFontScale=0.01
                 style=Style.(
                         style([
                           color(String("white")),
-                          fontSize(Float(textSize +. 5.)),
+                          fontSize(Float(textSize +. 10.)),
+                          textAlign(Center),
                         ])
                       )
-                value=(string_of_float(Parse.value(self.state.converted, Ingridients.find(self.state.currentIngridient).density, unitFactor(self.state.measurementUnit))) ++ switch self.state.measurementUnit {
-                  | Metric => " gr."
-                  | Imperial => " oz."
-                  })
+                value=(
+                  Parse.convertedMagnitude(
+                    ~step=self.state.initial,
+                    ~extraCups=self.state.extraCups,
+                    ~ingridientUuid=self.state.currentIngridient,
+                    ~unit=self.state.measurementUnit,
+                  )
+                )
+              />
+              <Text 
+              style=Style.(
+                        style([
+                          color(String("white")),
+                          fontSize(Float(textSize)),
+                          marginTop(Pt(8.))
+                        ])
+                      )
+              value=(
+                switch (self.state.measurementUnit) {
+                | Metric =>
+                  switch (
+                    Ingridients.find(self.state.currentIngridient).unit
+                  ) {
+                  | Ingridients.Liquid => " ml."
+                  | Ingridients.Solid => " gr."
+                  }
+                | Imperial =>
+                  switch (
+                    Ingridients.find(self.state.currentIngridient).unit
+                  ) {
+                  | Ingridients.Liquid => " floz."
+                  | Ingridients.Solid => " oz."
+                  }
+                }
+              )
               />
             </View>
-            <FractionBubble
-              onPress=( () => {self.send(ChangeMesurementUnit(self.state.measurementUnit))} )
-              diameter = (circleDiameter /. 2.)
-              text=( switch self.state.measurementUnit {
+            <BubbleButton
+              onPress=(
+                () =>
+                  self.send(ChangeMesurementUnit(self.state.measurementUnit))
+              )
+              diameter=(circleDiameter /. 2.)
+              text=(
+                switch (self.state.measurementUnit) {
                 | Metric => "Kg"
                 | Imperial => "Oz"
-                } )
+                }
+              )
               style=Style.(
                       style([
-                        borderColor(Colors.lemonTea),
-                        borderWidth(4.),
                         position(Absolute),
                         right(Pt(circleDiameter)),
-                        top(Pt(0.)),
-                        backgroundColor(Colors.oyster),
+                        top(Pt(-5.)),
+                        backgroundColor(Colors.light_pewter),
                       ])
                     )
             />
-            <FractionBubble
-              onPress=( () => {self.send(ChangeMesurementUnit(self.state.measurementUnit))} )
-              diameter = (circleDiameter /. 2.)
-              text=( "+/- 1")
+            <View
               style=Style.(
                       style([
-                        borderColor(Colors.lemonTea),
-                        borderWidth(4.),
                         position(Absolute),
-                        right(Pt(- 17.5)),
-                        top(Pt(circleDiameter *. 0.93)),
-                        backgroundColor(Colors.oyster),
+                        right(Pt(-. circleDiameter /. 4.)),
+                        top(Pt(circleDiameter -. circleDiameter /. 4.0)),
+                        marginRight(Pt(5.)),
+                        flexDirection(Column),
+                        flex(1.),
+                        justifyContent(SpaceAround),
                       ])
-                    )
-            />
+                    )>
+              <BubbleButton
+                onPress=(() => self.send(AddExtraCup(1)))
+                diameter=(circleDiameter /. 3.2)
+                text="+"
+                style=Style.(style([backgroundColor(Colors.light_pewter)]))
+              />
+              <BubbleButton
+                onPress=(() => self.send(AddExtraCup(-1)))
+                diameter=(circleDiameter /. 3.2)
+                text="-"
+                style=Style.(
+                        style([
+                          marginTop(Pt(-8.)),
+                          backgroundColor(Colors.light_pewter),
+                          marginLeft(Pt(-. circleDiameter /. 3.8)),
+                        ])
+                      )
+              />
+            </View>
           </View>
           <View style=Style.(style([flex(2.), marginBottom(Pt(50.))]))>
             <IngridientViewPager
@@ -316,7 +385,7 @@ let make = _children => {
         <View style=Styles.bottomTab key="0">
           <Text
             style=Style.(
-                    style([fontSize(Float(18.)), color(String("white"))])
+                    style([fontSize(Float(20.)), color(String("white"))])
                   )
             value="Milk"
           />
@@ -380,15 +449,11 @@ let make = _children => {
         <View style=Styles.bottomTab key="8">
           <Text
             style=Style.(
-                    style([fontSize(Float(18.)), color(String("white"))])
+                    style([fontSize(Float(20.)), color(String("white"))])
                   )
             value="Sugar"
           />
         </View>
       </ViewPagerAndroid>
     </View>,
-  /* <DropDownBar
-       shouldTriggerAnim=self.state.sliderHasFocus
-       step=self.state.sliderUnit
-     /> */
 };

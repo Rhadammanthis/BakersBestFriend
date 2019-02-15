@@ -8,7 +8,7 @@ type action =
   | StartAnim(bool)
   | Spring;
 
-let component = ReasonReact.reducerComponent("FractionBubble");
+let component = ReasonReact.reducerComponent("BubbleButton");
 
 let make = (~style, ~text, ~onPress, ~diameter, _children) => {
   ...component,
@@ -45,8 +45,6 @@ let make = (~style, ~text, ~onPress, ~diameter, _children) => {
     /* self.send(TriggerAnim(shouldTriggerAnim)); */
     /*Parent view*/
     /* Js.log("inittial: " ++ string_of_bool(shouldTriggerAnim)); */
-
-    let animated = Animated.Value.create(0.);
 
     let newStyle =
       BsReactNative.Style.combine(
@@ -113,7 +111,7 @@ let make = (~style, ~text, ~onPress, ~diameter, _children) => {
                 )>
           <Text
             style=Style.(
-                    style([color(String("white")), fontSize(Float(14.))])
+                    style([color(String("white")), fontSize(Float(17.)), fontWeight(`Bold),])
                   )
             value=text
           />

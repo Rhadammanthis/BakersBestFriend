@@ -77,8 +77,9 @@ let generateStepMarkers = (~steps: int, ~barHeight: float) => {
 
   let offsets: array(float) = Array.make(steps - 1, 0.);
   for (i in 0 to steps - 2) {
-    offsets[i] = float_of_int(i + 1) *. offset;
-    /* Js.log("Item " ++ string_of_int(i) ++ " with offset " ++ string_of_float(offsets[i])); */
+    offsets[i] =
+      float_of_int(i + 1) *. offset;
+      /* Js.log("Item " ++ string_of_int(i) ++ " with offset " ++ string_of_float(offsets[i])); */
   };
 
   let markers =
@@ -177,12 +178,14 @@ let make = (~onStepMet, ~onHorizontalStep, ~hasFocus, _children) => {
               PanResponder.panHandlers(
                 PanResponder.create(
                   ~onMoveShouldSetPanResponderCapture=
-                    {PanResponder.callback((_event, _gesture) => {hasFocus(true);  Js.log("bar has focus!"); true})
-                  },
+                    PanResponder.callback((_event, _gesture) => {
+                      hasFocus(true);
+                      Js.log("bar has focus!");
+                      true;
+                    }),
                   ~onPanResponderMove=
                     `callback(
                       PanResponder.callback((_event, _gesture) => {
-                        
                         let newDeltaValue =
                           getValueFromBottomOffset(
                             ~offset=-. _gesture.dy,
@@ -217,7 +220,9 @@ let make = (~onStepMet, ~onHorizontalStep, ~hasFocus, _children) => {
                       }),
                     ),
                   ~onPanResponderRelease=
-                    PanResponder.callback((_event, _gesture) => hasFocus(false)),
+                    PanResponder.callback((_event, _gesture) =>
+                      hasFocus(false)
+                    ),
                   (),
                 ),
               )
@@ -234,19 +239,28 @@ let make = (~onStepMet, ~onHorizontalStep, ~hasFocus, _children) => {
                   )
           />
           (
-            self.state.barHeight > 0. ? 
-            ReasonReact.array(
-              Array.of_list(
-                generateStepMarkers(
-                  ~steps=ranges.steps,
-                  ~barHeight=self.state.barHeight,
+            self.state.barHeight > 0. ?
+              ReasonReact.array(
+                Array.of_list(
+                  generateStepMarkers(
+                    ~steps=ranges.steps,
+                    ~barHeight=self.state.barHeight,
+                  ),
                 ),
-              ),
-            ) :
-            <View />
+              ) :
+              <View />
           )
         </View>
-        <Text style=Style.(style([fontSize(Float(18.))])) value="Cups" />
+        <View>
+          <Text
+            style=Style.(style([fontSize(Float(15.)), textAlign(Center)]))
+            value="Cup"
+          />
+          <Text
+            style=Style.(style([fontSize(Float(15.))]))
+            value="Fractions"
+          />
+        </View>
       </View>;
   },
 };

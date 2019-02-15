@@ -124,8 +124,8 @@ let make =
                       borderColor(Colors.lemonTea),
                       borderWidth(4.),
                       borderRadius(self.state.componentWidth),
-                      width(Pt(self.state.componentWidth *. 0.85)),
-                      height(Pt(self.state.componentWidth *. 0.85)),
+                      width(Pt(self.state.componentWidth *. 0.95)),
+                      height(Pt(self.state.componentWidth *. 0.95)),
                       justifyContent(Center),
                       alignItems(Center),
                     ])
