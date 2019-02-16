@@ -313,10 +313,10 @@ let make = _children => {
                   self.send(ChangeMesurementUnit(self.state.measurementUnit))
               )
               diameter=(circleDiameter /. 2.)
-              text=(
+              image=(
                 switch (self.state.measurementUnit) {
-                | Metric => "Kg"
-                | Imperial => "Oz"
+                | Metric => Some(BsReactNative.Packager.require("../../../assets/milk.png"))
+                | Imperial => Some(BsReactNative.Packager.require("../../../assets/milk.png"))
                 }
               )
               style=Style.(

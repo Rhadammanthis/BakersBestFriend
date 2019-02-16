@@ -10,7 +10,37 @@ type action =
 
 let component = ReasonReact.reducerComponent("BubbleButton");
 
-let make = (~style, ~text, ~onPress, ~diameter, _children) => {
+let renderIndicator =
+    (~text, ~image: option(BsReactNative.Packager.required), ~diameter) =>
+  switch (image) {
+  | None =>
+    <Text
+      style=Style.(
+              style([
+                color(String("white")),
+                fontSize(Float(17.)),
+                fontWeight(`Bold),
+              ])
+            )
+      value=text
+    />
+  | Some(imgResource) =>
+    <Image
+      style=Style.(style([height(Pt(diameter /. 2.)), width(Pt(diameter /. 2.))]))
+      source=(`Required(imgResource))
+      resizeMode=`stretch
+    />
+  };
+
+let make =
+    (
+      ~style,
+      ~text="",
+      ~onPress,
+      ~diameter,
+      ~image: option(BsReactNative.Packager.required)=None,
+      _children,
+    ) => {
   ...component,
   initialState: () => {animation: Animated.Value.create(0.), played: false},
   reducer: (action, state) =>
@@ -109,12 +139,7 @@ let make = (~style, ~text, ~onPress, ~diameter, _children) => {
                     alignItems(Center),
                   ])
                 )>
-          <Text
-            style=Style.(
-                    style([color(String("white")), fontSize(Float(17.)), fontWeight(`Bold),])
-                  )
-            value=text
-          />
+          (renderIndicator(~text, ~image, ~diameter))
         </View>
       </TouchableWithoutFeedback>
     </Animated.View>;
