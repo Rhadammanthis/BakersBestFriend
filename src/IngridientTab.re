@@ -315,8 +315,8 @@ let make = _children => {
               diameter=(circleDiameter /. 2.)
               image=(
                 switch (self.state.measurementUnit) {
-                | Metric => Some(BsReactNative.Packager.require("../../../assets/milk.png"))
-                | Imperial => Some(BsReactNative.Packager.require("../../../assets/milk.png"))
+                | Metric => Some(BsReactNative.Packager.require("../../../assets/metric.png"))
+                | Imperial => Some(BsReactNative.Packager.require("../../../assets/imperial.png"))
                 }
               )
               style=Style.(

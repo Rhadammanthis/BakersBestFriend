@@ -26,7 +26,7 @@ let renderIndicator =
     />
   | Some(imgResource) =>
     <Image
-      style=Style.(style([height(Pt(diameter /. 2.)), width(Pt(diameter /. 2.))]))
+      style=Style.(style([height(Pt(diameter)), width(Pt(diameter))]))
       source=(`Required(imgResource))
       resizeMode=`stretch
     />

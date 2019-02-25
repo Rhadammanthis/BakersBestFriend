@@ -56,3 +56,5 @@ buck-out/
 *.jsbundle
 
 lib/
+release_android
+android/app/my_keystore.jks
