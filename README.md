@@ -1,7 +1,5 @@
 # BakersBestFriend
 
-> App to convert cooking units
-
 > This is a React Native application developed in Reason.
 
 ## Installation
