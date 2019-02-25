@@ -1,4 +1,6 @@
-# MyReasonApp
+# BakersBestFriend
+
+> App to convert cooking units
 
 > This is a React Native application developed in Reason.
 
@@ -29,3 +31,4 @@ The `react-native init` command generates a lot of boilerplate with files that m
 - `.flowconfig` - optional, used to configure `Flow`, which is a type checker for Javascript. Can be removed as we are writing our code in Reason now
 - `.watchmanconfig` - optional, configuration for `Watchman`, which is a Facebook tool for listening to file system changes. This file is not needed, unless you plan on extending its configuration right now
 - `app.json` - optional, usually generated when you `eject` from an `Expo` or `create-react-native-app` project. Can be removed without any issues
+
