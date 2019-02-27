@@ -1,19 +1,5 @@
 open BsReactNative;
 
-/* module Styles = {
-     open Style;
-
-     let container =
-       style([
-         flex(1.),
-         justifyContent(FlexStart),
-         padding(Pt(10.)),
-         backgroundColor(String("white")),
-       ]);
-
-     let text = style([color(String("#fff")), fontSize(Float(24.))]);
-   }; */
-
 type state = {
   barHeight: float,
   deltaValue: float,

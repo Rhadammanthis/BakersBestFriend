@@ -1,35 +1,5 @@
 open BsReactNative;
 
-type imageResource = {
-  first: BsReactNative.Packager.required,
-  second: BsReactNative.Packager.required,
-};
-
-type ingridient =
-  | Flour
-  | Honey
-  | Sugar;
-
-type coordinates = {
-  right: int,
-  left: float,
-};
-
-type pair = {
-  first: coordinates,
-  second: coordinates,
-};
-
-let convertIndex = (~index: int) => {
-  let currentIngridient: ingridient =
-    switch (index) {
-    | 0 => Flour
-    | 1 => Honey
-    | 2 => Sugar
-    };
-  currentIngridient;
-};
-
 module Styles = {
   open Style;
 
@@ -60,28 +30,16 @@ module Styles = {
 };
 
 type state = {
-  algo: int,
-  initial: int,
-  converted: int,
-  sliderUnit: int,
-  sliderUnitMessage: string,
+  sliderVal: int,
   translateX: float,
-  imageContainerWidth: float,
-  ingridientAssets: imageResource,
   currentIngridient: int,
-  sliderHasFocus: bool,
   measurementUnit: Ingridients.measurementUnits,
   extraCups: int,
 };
 type action =
-  | ChangeAlgo(int)
-  | UpdateConvertedAmount(int)
-  | UpdateInitialAmount(int)
-  | ChangeSliderUnit(int)
+  | UpdateSliderValue(int)
   | UpdateAnimatedValue(float)
-  | UpdateImageContainerWidth(float)
   | SetCurrentIngridient(int)
-  | UpdateSliderFocus(bool)
   | ChangeMesurementUnit(Ingridients.measurementUnits)
   | AddExtraCup(int);
 
@@ -95,31 +53,43 @@ let animatedValue = Animated.Value.create(1.0);
 let unitFactor = (unit: Ingridients.measurementUnits) => {
   let factor =
     switch (unit) {
-    | Imperial => 0.035
+    | Imperial => 0.035274
     | Metric => 1.
     };
   factor;
 };
 
-/*0.035274
-  }; */
+let generateIngridientsStubs = (~lenght: int) => {
+  Js.log(lenght);
+  let ingridients: array(int) = Array.make(lenght, 0);
+  for (i in 0 to lenght - 1) {
+    ingridients[i] = i;
+  };
+
+  let ingridientComponents =
+    List.map(
+      ingridientItem => 
+        <View key=(string_of_int(ingridientItem)) style=Styles.bottomTab>
+          <Text
+            style=Style.(
+                    style([fontSize(Float(18.)), color(Colors.white)])
+                  )
+            value=Ingridients.find(ingridientItem).name
+          />
+        </View>
+      ,
+      Array.to_list(ingridients),
+    );
+
+    ingridientComponents;
+};
 
 let make = _children => {
   ...component,
   initialState: () => {
-    algo: 0,
-    initial: 0,
-    converted: 0,
-    sliderUnit: 0,
-    sliderUnitMessage: "Half a cup (1/2)",
+    sliderVal: 0,
     translateX: 0.,
-    imageContainerWidth: 0.,
-    ingridientAssets: {
-      first: Packager.require("../../../assets/flour.png"),
-      second: Packager.require("../../../assets/butter.png"),
-    },
     currentIngridient: 0,
-    sliderHasFocus: false,
     measurementUnit: Metric,
     extraCups: 0,
   },
@@ -130,18 +100,12 @@ let make = _children => {
         ...state,
         extraCups: state.extraCups + i > 0 ? state.extraCups + i : 0,
       })
-    | ChangeAlgo(v) => ReasonReact.Update({...state, algo: v})
-    | UpdateConvertedAmount(f) => ReasonReact.Update({...state, converted: f})
-    | UpdateInitialAmount(f) => ReasonReact.Update({...state, initial: f})
+    | UpdateSliderValue(f) => ReasonReact.Update({...state, sliderVal: f})
     | SetCurrentIngridient(i) =>
       ReasonReact.Update({...state, currentIngridient: i})
-
-    | UpdateImageContainerWidth(w) =>
-      ReasonReact.Update({...state, imageContainerWidth: w})
     | UpdateAnimatedValue(anim) =>
       ReasonReact.Update({...state, translateX: anim})
-    | UpdateSliderFocus(b) =>
-      ReasonReact.Update({...state, sliderHasFocus: b})
+
     | ChangeMesurementUnit(u) =>
       let newUnit =
         switch (u) {
@@ -149,39 +113,17 @@ let make = _children => {
         | Metric => Ingridients.Imperial
         };
       ReasonReact.Update({...state, measurementUnit: newUnit});
-    | ChangeSliderUnit(u) =>
-      let message =
-        switch (u) {
-        | 0 => "Half cup (1/2)"
-        | 1 => "Third cup (3/2)"
-        | 2 => "Quarter cup (4/2)"
-        };
-
-      ReasonReact.Update({
-        ...state,
-        sliderUnit: u,
-        sliderUnitMessage: message,
-      });
     },
   render: self =>
     <View style=Style.(style([flex(1.), paddingTop(Pt(10.))]))>
       <View style=Styles.container>
         <VerticalSlider
-          onStepMet=(
-            (step: int) => {
-              self.send(UpdateInitialAmount(step));
-              self.send(UpdateConvertedAmount(step));
-            }
-          )
+          onStepMet=((step: int) => self.send(UpdateSliderValue(step)))
           onHorizontalStep=(
-            (horizontalStep: int) => {
-              self.send(ChangeSliderUnit(horizontalStep));
-              Js.log("Horizontal step: " ++ string_of_int(horizontalStep));
-            }
+            (horizontalStep: int) =>
+              Js.log("Horizontal step: " ++ string_of_int(horizontalStep))
           )
-          hasFocus=(
-            (hasFocus: bool) => self.send(UpdateSliderFocus(hasFocus))
-          )
+          hasFocus=((hasFocus: bool) => Js.log("Has focus!"))
         />
         <View style=Styles.rightPanel>
           <View
@@ -212,7 +154,7 @@ let make = _children => {
                 <Text
                   style=Style.(
                           style([
-                            color(String("white")),
+                            color(Colors.white),
                             fontSize(Float(textSize)),
                             marginTop(Pt(-25.)),
                           ])
@@ -231,13 +173,13 @@ let make = _children => {
                 <Text
                   style=Style.(
                           style([
-                            color(String("white")),
+                            color(Colors.white),
                             fontSize(Float(textSize +. 10.)),
                             paddingLeft(Pt(circleDiameter /. 2.5)),
                           ])
                         )
                   value=(
-                    Parse.message(self.state.initial, self.state.extraCups)
+                    Parse.message(self.state.sliderVal, self.state.extraCups)
                   )
                 />
               </View>
@@ -265,46 +207,46 @@ let make = _children => {
                 minimumFontScale=0.01
                 style=Style.(
                         style([
-                          color(String("white")),
+                          color(Colors.white),
                           fontSize(Float(textSize +. 10.)),
                           textAlign(Center),
                         ])
                       )
                 value=(
                   Parse.convertedMagnitude(
-                    ~step=self.state.initial,
+                    ~step=self.state.sliderVal,
                     ~extraCups=self.state.extraCups,
                     ~ingridientUuid=self.state.currentIngridient,
                     ~unit=self.state.measurementUnit,
                   )
                 )
               />
-              <Text 
-              style=Style.(
+              <Text
+                style=Style.(
                         style([
-                          color(String("white")),
+                          color(Colors.white),
                           fontSize(Float(textSize)),
-                          marginTop(Pt(8.))
+                          marginTop(Pt(8.)),
                         ])
                       )
-              value=(
-                switch (self.state.measurementUnit) {
-                | Metric =>
-                  switch (
-                    Ingridients.find(self.state.currentIngridient).unit
-                  ) {
-                  | Ingridients.Liquid => " ml."
-                  | Ingridients.Solid => " gr."
+                value=(
+                  switch (self.state.measurementUnit) {
+                  | Metric =>
+                    switch (
+                      Ingridients.find(self.state.currentIngridient).unit
+                    ) {
+                    | Ingridients.Liquid => " ml."
+                    | Ingridients.Solid => " gr."
+                    }
+                  | Imperial =>
+                    switch (
+                      Ingridients.find(self.state.currentIngridient).unit
+                    ) {
+                    | Ingridients.Liquid => " floz."
+                    | Ingridients.Solid => " oz."
+                    }
                   }
-                | Imperial =>
-                  switch (
-                    Ingridients.find(self.state.currentIngridient).unit
-                  ) {
-                  | Ingridients.Liquid => " floz."
-                  | Ingridients.Solid => " oz."
-                  }
-                }
-              )
+                )
               />
             </View>
             <BubbleButton
@@ -315,8 +257,18 @@ let make = _children => {
               diameter=(circleDiameter /. 2.)
               image=(
                 switch (self.state.measurementUnit) {
-                | Metric => Some(BsReactNative.Packager.require("../../../assets/metric.png"))
-                | Imperial => Some(BsReactNative.Packager.require("../../../assets/imperial.png"))
+                | Metric =>
+                  Some(
+                    BsReactNative.Packager.require(
+                      "../../../assets/metric.png",
+                    ),
+                  )
+                | Imperial =>
+                  Some(
+                    BsReactNative.Packager.require(
+                      "../../../assets/imperial.png",
+                    ),
+                  )
                 }
               )
               style=Style.(
@@ -382,78 +334,13 @@ let make = _children => {
           }
         )
         style=Style.(style([flex(1.), height(Pt(150.))]))>
-        <View style=Styles.bottomTab key="0">
-          <Text
-            style=Style.(
-                    style([fontSize(Float(20.)), color(String("white"))])
-                  )
-            value="Milk"
-          />
-        </View>
-        <View style=Styles.bottomTab key="1">
-          <Text
-            style=Style.(
-                    style([fontSize(Float(18.)), color(String("white"))])
-                  )
-            value="Flour"
-          />
-        </View>
-        <View style=Styles.bottomTab key="2">
-          <Text
-            style=Style.(
-                    style([fontSize(Float(18.)), color(String("white"))])
-                  )
-            value="Butter"
-          />
-        </View>
-        <View style=Styles.bottomTab key="3">
-          <Text
-            style=Style.(
-                    style([fontSize(Float(18.)), color(String("white"))])
-                  )
-            value="Baking Soda"
-          />
-        </View>
-        <View style=Styles.bottomTab key="4">
-          <Text
-            style=Style.(
-                    style([fontSize(Float(18.)), color(String("white"))])
-                  )
-            value="Cocoa"
-          />
-        </View>
-        <View style=Styles.bottomTab key="5">
-          <Text
-            style=Style.(
-                    style([fontSize(Float(18.)), color(String("white"))])
-                  )
-            value="Cream"
-          />
-        </View>
-        <View style=Styles.bottomTab key="6">
-          <Text
-            style=Style.(
-                    style([fontSize(Float(18.)), color(String("white"))])
-                  )
-            value="Oil"
-          />
-        </View>
-        <View style=Styles.bottomTab key="7">
-          <Text
-            style=Style.(
-                    style([fontSize(Float(18.)), color(String("white"))])
-                  )
-            value="Powdered Sugar"
-          />
-        </View>
-        <View style=Styles.bottomTab key="8">
-          <Text
-            style=Style.(
-                    style([fontSize(Float(20.)), color(String("white"))])
-                  )
-            value="Sugar"
-          />
-        </View>
+        (ReasonReact.array(
+            Array.of_list(
+              generateIngridientsStubs(
+                ~lenght=Ingridients.lenght - 1
+              ),
+            ),
+          ))
       </ViewPagerAndroid>
     </View>,
 };

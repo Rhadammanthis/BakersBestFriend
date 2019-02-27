@@ -5,3 +5,5 @@ let oyster: BsReactNative.Style.string_interpolated = String("#D5C3AA");
 let pewter: BsReactNative.Style.string_interpolated = String("#867666");
 let light_pewter: BsReactNative.Style.string_interpolated = String("#b09a83");
 let lemonTea: BsReactNative.Style.string_interpolated = String("#E1B80D");
+
+let white: BsReactNative.Style.string_interpolated = String("#FFFFFF");

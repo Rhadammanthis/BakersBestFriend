@@ -58,3 +58,4 @@ buck-out/
 lib/
 release_android
 android/app/my_keystore.jks
+.bsb.lock
